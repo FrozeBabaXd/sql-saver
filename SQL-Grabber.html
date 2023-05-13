@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="endercoder">
+    <title>SQL Grabber</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inconsolata&family=Source+Code+Pro&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Inconsolata', monospace;
+            background-color: #1a1a1a;
+        }
+
+        section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #header {
+            color: white;
+        }
+
+        .container {
+            display: none;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+			margin-top: 40px;
+            width: 100%;
+            height: 60%;
+            gap: 20px;
+        }
+
+        .box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 40%;
+            min-height: 50vh;
+            border: white outset 5px;
+            background-color: gray;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            flex-flow: column nowrap;
+            overflow: scroll;
+            width: 95%;
+            height: 40vh;
+            padding: 5px;
+            background-color: black;
+            font-size: 15px;
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        .content::-webkit-scrollbar {
+            display: none;
+        }
+		
+		.feature {
+			background: gray;
+			padding: 15px;
+			margin: 20px;
+			border-radius: 15px;
+		}
+		
+		.request {
+			display: none;
+			position: fixed; 
+			right: 0; 
+			top: 5%;
+			text-align: center;
+			background: black;
+			color: white; 
+			padding: 20px; 
+			font-size: 15px;
+		}
+		
+		.request b {
+			font-size: 20px;
+		}
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #690000;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        input:checked+.slider {
+            background-color: #00c21d;
+        }
+
+        input:focus+.slider {
+            box-shadow: 0 0 1px #690000;
+        }
+
+        input:checked+.slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        .success {
+            background-color: #24a640;
+            border: #24a640 inset 5px;
+        }
+
+        .danger {
+            background-color: #a62d24;
+            border: #a62d24 inset 5px;
+        }
+
+        .text-green {
+            color: #00ff26;
+        }
+
+        .text-red {
+            color: #ff0000;
+        }
+		
+		@keyframes rgb {
+			0% { color: #ff0000; }
+			20% { color: #fbff00; }
+			40% { color: #00ff15; }
+			60% { color: #534aff; }
+			80% { color: #7b00ff; }
+			100% { color: #ff0000; }
+		}
+		
+		@media only screen and (max-width: 768px) {
+			.container {
+    			flex-direction: column;
+				gap: 5px;
+				width: 95%;
+  			}
+			.box {
+				width: 80%;
+				margin-bottom: 40px;
+  			}
+		}
+    </style>
+</head>
+
+<body>
+    <section>
+		<h1 id="header">SQL Grabber by <span class="author">endercoder</span></h1>
+        <label class="switch">
+            <input type="checkbox" id="boolean">
+            <span class="slider"></span>
+        </label>
+		<div class="feature">
+			<span id="delayLine">Delay: <input id="delay-value" style="width: 25px;" type="number" placeholder="Ex: 2 or 3" minlength="1" maxlength="1" value="2"> seconds</span>
+		</div>
+		<div class="request">
+			<span>Total Request<br><b>0</b></span>
+		</div>
+		<div class="comments">
+			<span style="color: white;">Minimum 2 seconds for best connections &#129324</span>
+		</div>
+        <div class="container">
+            <div class="box success">
+                <h3>Success</h3>
+                <div class="content text-green" id="success"></div>
+            </div>
+            <div class="box danger">
+                <h3>Errors</h3>
+                <div class="content text-red" id="error"></div>
+            </div>
+        </div>
+    </section>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js" integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+	
+    $(document).ready(function() {
+        $("#boolean").change(function() {
+			$(".request").css("display", "block");
+			var Delay = document.getElementById("delay-value").value;
+			
+			if (Delay > 1){
+			
+            const success = document.getElementById("success");
+			const error = document.getElementById("error");
+            const scrollToBottom = () => {
+                success.scrollTop = success.scrollHeight;
+				error.scrollTop = error.scrollHeight;
+            }
+
+            var isChecked = $('#boolean:checked').val();
+			let resTrue =+ 1;
+			let resFalse =+ 1;
+			let totalRequests =+ 0;
+
+			function Thread() {	
+					var Auth = "Start";
+					totalRequests++;
+					$(".request").html("<span>Total Request<br><b>" + totalRequests + "</b></span>");
+                    
+					$.ajax({
+                        type: 'POST',
+                        url: './API/FeralAPI.php',
+                        data: {
+                            Cmd: Auth
+                        },
+						statusCode: { 504: function() { $("#error").append("<span>" + resFalse++ + ". Gateway timeout!</span>") },
+									  500: function() { $("#error").append("<span>" + resFalse++ + ". System Failture!</span>") },
+									  404: function() { $("#error").append("<span>" + resFalse++ + ". API Not Found!</span>") }
+									},
+                        success: (res) => {
+                            var json = res;
+
+							if (json === null) {
+								$("#error").append("<span>" + resFalse++ + ". API is down!</span>");
+							} else {
+								var status = json.status;
+                            	var message = json.message;
+								
+								if (status === "200") {
+									$("#success").append("<span>" + resTrue++ + ". " + message + "</span>");
+                            	} else if (status === "400") {
+									$("#error").append("<span>" + resFalse++ + ". " + message + "</span>");
+                            	} else {
+                            	    Swal.fire({
+                            	        position: 'center',
+                            	        icon: "error",
+                            	        title: message,
+                            	        showConfirmButton: false,
+                            	        timer: 1500
+                            	    })
+                            	}
+							}
+                        }
+                    })
+                }
+			
+            if (isChecked == "on") {
+				$(".container").css("display", "flex");
+				$(".author").css("animation", "rgb 5s infinite linear");
+				console.log(">>> Initializing APIs");
+				
+                var scroll = setInterval(scrollToBottom, Delay + 000);
+				var API = setInterval(Thread, Delay + "000");
+				
+				$("#boolean").change(function() {
+						clearInterval(API);
+						clearInterval(scroll);
+				});
+            }
+			} else {
+				Swal.fire({
+					position: 'center',
+					icon: "error",
+					title: "Please enter a value greater than 2 seconds!",
+					html: "IT IS DANGEROUS FOR YOUR BROWSER!",
+					showConfirmButton: false,
+					willClose: () => {
+						window.location.reload(true);
+					},
+					timer: 2000
+				})
+			}
+        });
+    });
+</script>
+
+</html>
